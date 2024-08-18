@@ -1,4 +1,5 @@
 "use client";
+import useDebounce from "@/components/Debounce";
 import { deleteObservation } from "@/apis/observations/deleteObservation";
 import { getObservationStats } from "@/apis/observations/getObservationStats";
 import { getObservations } from "@/apis/observations/getObservations";
@@ -37,6 +38,7 @@ function LoadingSkeleton() {
 export default function ObservationsTable() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const debounceSearch = useDebounce(search, 300);
   const [searchTags, setSearchTags] = useState<number[]>([]);
   const [searchUsers, setSearchUsers] = useState<number[]>([]);
   const [searchStatus, setSearchStatus] = useState<number[]>([]);
@@ -51,19 +53,29 @@ export default function ObservationsTable() {
     queryKey: [
       "observations",
       page,
-      search,
+      debounceSearch,
       searchTags,
       searchUsers,
       searchStatus,
     ],
-    queryFn: () =>
-      getObservations({
-        name: search,
-        page: page,
-        tags: searchTags,
-        user: searchUsers,
-        status: searchStatus,
-      }),
+    queryFn: async () => {
+      try {
+        const response = await getObservations({
+          page,
+          name: debounceSearch,
+          tags: searchTags,
+          users: searchUsers,
+          status: searchStatus,
+        });
+        return response;
+      } catch (error: any) {
+        if (error.response && error.response.status === 401) {
+          toast.error("Please sign in to continue");
+          return { results: [], count: 0, next: 0, previous: 0, total: 0 };
+        }
+        throw error;
+      }
+    },
   });
 
   const { data: tagData, isFetching: tagIsFetching } = useQuery({
@@ -98,13 +110,15 @@ export default function ObservationsTable() {
   const observations = data?.results as Observation[];
 
   const TagFilterData =
-    tagData?.map((tag) => {
-      return {
-        label: tag.name,
-        value: tag.targets.length,
-        id: tag.id || 0,
-      };
-    }) || [];
+    tagData
+      ?.filter((tag) => tag.observations.length > 0)
+      ?.map((tag) => {
+        return {
+          label: tag.name,
+          value: tag.observations.length,
+          id: tag.id || 0,
+        };
+      }) || [];
 
   const StatusFilterData =
     observationStats?.status_counts.map((status) => {
@@ -119,7 +133,7 @@ export default function ObservationsTable() {
     userData?.map((user) => {
       return {
         label: user.username,
-        value: user.observations || 0,
+        value: user.observations?.length || 0,
         id: user.id || 0,
       };
     }) || [];
@@ -168,7 +182,7 @@ export default function ObservationsTable() {
       <div className="container px-0 sm:max-w-[825px] lg:max-w-full  py-10">
         <div className="flex space-between py-2 px-2 gap-2">
           <Input
-            placeholder="Filter targets..."
+            placeholder="Filter observations..."
             className="text-primary-foreground h-8 w-[150px] lg:w-[250px]"
             onChange={(e) => setSearch(e.target.value)}
           />

@@ -21,7 +21,11 @@ function LoadingSkeleton() {
 export default function Lulin(props: { observation_id: number }) {
   const [codeUpdate, setCodeUpdate] = useState(false);
 
-  const { data: lulinObservations, isFetching } = useQuery({
+  const {
+    data: lulinObservations,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["getLulin"],
     queryFn: () =>
       getLulin(props.observation_id).then((data) => {
@@ -34,9 +38,12 @@ export default function Lulin(props: { observation_id: number }) {
     <>
       <div className="container mx-auto px-4 h-200 max-h-200 w-full">
         <div>
-          <h1 className="my-20 text-4xl font-extrabold tracking-tight lg:text-5xl text-primary-foreground">
+          <h1 className="my-10 text-4xl font-extrabold tracking-tight lg:text-5xl text-primary-foreground">
             Edit your observation
           </h1>
+          <h2 className="my-10 text-2xl font-extrabold tracking-tight lg:text-2xl text-primary-foreground">
+            {lulinObservations[0]?.observation}
+          </h2>
         </div>
         {isFetching ? (
           <LoadingSkeleton />
@@ -45,7 +52,11 @@ export default function Lulin(props: { observation_id: number }) {
         )}
 
         <div className="flex justify-center">
-          <LulinData data={lulinObservations} setCodeUpdate={setCodeUpdate} />
+          <LulinData
+            data={lulinObservations}
+            setCodeUpdate={setCodeUpdate}
+            refetch={refetch}
+          />
         </div>
 
         <CodeBlock

@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from targets.views import GetTargetsAltAz
+from targets.views import getTargetsAltAz
 from targets.visibility import TargetAltAz
 
 from .models import Lulin, Observation
@@ -32,7 +32,7 @@ class ObservationsView(APIView):
         observatory = request.query_params.get('observatory')
         status = request.query_params.get('status')
         name = request.query_params.get('name')
-        users = request.query_params.get('user')
+        users = request.query_params.get('users')
         tags = request.query_params.get('tags')
 
         if observation_id:
@@ -46,11 +46,13 @@ class ObservationsView(APIView):
         if name:
             conditions.append(Q(name__icontains=name))
         if users:
-            conditions.append(Q(user=users))
+            users = users.split(',')
+            users = [int(user) for user in users if user.isdigit()]
+            if users:
+                conditions.append(Q(user__in=users))
         if tags:
             tags = tags.split(',')
             tags = [int(tag) for tag in tags if tag.isdigit()]
-
             if tags:
                 conditions.append(Q(tags__in=tags))
 
@@ -235,7 +237,7 @@ def GetObservationAltAz(request, pk):
 
     targets = [x.target for x in observations]
 
-    data: List[TargetAltAz] = GetTargetsAltAz(
+    data: List[TargetAltAz] = getTargetsAltAz(
         targets, observation.start_date, observation.end_date)
 
     return JsonResponse(data, safe=False)
