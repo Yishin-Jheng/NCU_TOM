@@ -4,9 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import { Overview } from "./overview";
-import { RecentSales } from "./recent-sales";
 
 export default function DashboardPage(params: { params: { id: number } }) {
   const { data: target } = useQuery({
@@ -172,7 +170,7 @@ export default function DashboardPage(params: { params: { id: number } }) {
                 </Card>
               </div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4">
+                <Card className="col-span-7">
                   <CardHeader>
                     <CardTitle>Overview</CardTitle>
                   </CardHeader>
@@ -180,17 +178,17 @@ export default function DashboardPage(params: { params: { id: number } }) {
                     <Overview id={params.params.id} />
                   </CardContent>
                 </Card>
-                <Card className="col-span-3">
+                {/* <Card className="col-span-3">
                   <CardHeader>
                     <CardTitle>Recent Observations</CardTitle>
-                    {/* <CardDescription>
+                    <CardDescription>
                       You made 265 sales this month.
-                    </CardDescription> */}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <RecentSales />
                   </CardContent>
-                </Card>
+                </Card> */}
               </div>
             </TabsContent>
           </Tabs>
